@@ -1,7 +1,7 @@
 """ Python Library for calling the Hue API """
 
 from constants import HTTP_DELETE, HTTP_GET, HTTP_POST, HTTP_PUT, PORTAL_URL
-from request_wrapper import json_rpc_call
+from request_wrapper import json_rpc_call, request_get
 
 #########################################################################################################
 # Lights API                                                                                            #
@@ -22,14 +22,14 @@ def get_all_lights(url, username):
         Returns a list of all lights in the system, each light has a name and unique identification
         number. If there are no lights in the system then the bridge will return an empty object, {}.
 
-        {
+        [
             "1": {
                 "name": "Bedroom"
             },
             "2": {
                 "name": "Kitchen"
             }
-        }
+        ]
     """
 
     method_name = 'lights'
@@ -929,16 +929,45 @@ def discover_local_bridges():
             ]
     """
 
-    method_name = ""
-    url         = ""
-    keys        = {}
-    params      = {}
-
-    return json_rpc_call(url, HTTP_GET, method_name, params, keys, base_url_overide=PORTAL_URL)
+    return request_get(PORTAL_URL).json()
 
 #########################################################################################################
 # Composed and granular methods                                                                         #
 #########################################################################################################
+
+def get_username():
+    """ Helper method to authenticate """
+    bridge_ip = discover_local_bridges()[0]['internalipaddress']
+    
+    url = "http://{0}".format(bridge_ip)
+    device_type = "dr-hue"
+    response = create_user(url, device_type)
+    
+    return response[0]['success']['username']
+
+def turn_all_lights_on(url, username, sleep_interval=0):
+    """ All inclusive method that will get a user name, find all lights, turn on all lights"""
+    from time import sleep 
+
+    lights = {}
+    lights.update(get_all_lights(url, username))
+
+    print "Turning %s lights on one by one with interval of '%s' seconds" % (len(lights), sleep_interval)
+    for light in lights.keys():
+        turn_light_on(url, light, username)
+        sleep(sleep_interval)
+
+def turn_all_lights_off(url, username, sleep_interval=0):
+    """ All inclusive method that will get a user name, find all lights, turn off all lights"""
+    from time import sleep 
+
+    lights = {}
+    lights.update(get_all_lights(url, username))
+
+    print "Turning %s lights off one by one with interval of '%s' seconds" % (len(lights), sleep_interval)
+    for light in lights.keys():
+        turn_light_off(url, light, username)
+        sleep(sleep_interval)
 
 def turn_light_off(url, light_id, username):
     """ Turn the light off
