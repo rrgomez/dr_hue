@@ -15,9 +15,11 @@ Sample Usage:
     import dr_hue
 
     # Grabs the first bridge that is recognized
+    
     bridge_ip = dr_hue.discover_local_bridges()[0]['internalipaddress']
     url       = "http://{0}".format(bridge_ip)
     username  = dr_hue.get_username()
+
     dr_hue.turn_all_lights_on(url, username, sleep_interval=2)
     dr_hue.turn_all_lights_off(url, username, sleep_interval=0)
 
