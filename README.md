@@ -2,7 +2,9 @@
 dr_hue
 ==========
 
-Phillips Hue control library based on the API found at http://developers.meethue.com/
+dr_hue is a control library for the Phillips Hue. The control library currently just a requests based wrapper around the Hue API (found at http://developers.meethue.com/). This library aims to be as straight of a python representation of the API.
+
+Documentation is listed in the dr_hue.py module, and is, more or less, a straight pull from the API page with some minor modifications.
 
 Sample Usage:
 
