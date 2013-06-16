@@ -33,6 +33,18 @@ def _sanitize_url(url, variables):
         url = re.sub('<'+key+'>', variables[key], url)
     return url
 
+def request_get(url):
+    """ Make a simple get to a given url and return the response """
+    parsed_url = urlparse(url)
+    if parsed_url.scheme not in VALID_SCHEMES:
+        msg = "No valid scheme found, please include one of '%s' in your url" % VALID_SCHEMES
+        raise GenericCallMethodException(msg)
+
+    # save the response and throw an error if the get didn't work
+    response = requests.get(url)
+    response.raise_for_status()
+    return response
+
 def json_rpc_call(url, method_type, method_name, params, keys, base_url_overide=None):
     """ API Call wrapper for accessing the Hue system
 
@@ -56,13 +68,11 @@ def json_rpc_call(url, method_type, method_name, params, keys, base_url_overide=
 
     # If url doesn't have http or https, fail
     parsed_url = urlparse(qualified_url)
-    print qualified_url
     if parsed_url.scheme not in VALID_SCHEMES and not base_url_overide :
         msg = "No valid scheme found, please include one of '%s' in your url" % VALID_SCHEMES
         raise GenericCallMethodException(msg)
 
     data = json.dumps(params)
-
     response = {
         HTTP_DELETE:  lambda x: requests.delete(qualified_url,  data=data),
         HTTP_GET:     lambda x: requests.get(qualified_url,     data=data),
@@ -70,14 +80,12 @@ def json_rpc_call(url, method_type, method_name, params, keys, base_url_overide=
         HTTP_OPTIONS: lambda x: requests.options(qualified_url, data=data),
         HTTP_POST:    lambda x: requests.post(qualified_url,    data=data),
         HTTP_PUT:     lambda x: requests.put(qualified_url,     data=data)
-    }[method_type](None).json()
+    }[method_type](None)
 
-    print response
-
+    response.raise_for_status()
     for rsp in response:
-        print rsp
         if 'error' in rsp:
-            msg = "api_failure: %s " %rsp["error"]["description"]
+            msg = "api_failure: %s " % rsp["error"]["description"]
             raise JsonRpcGetException(msg, rsp=response, keys=keys)
 
-    return response
+    return response.json()
